@@ -4,7 +4,7 @@ set -euo pipefail ; # <- this semicolon and comment make options apply
 # even when script is corrupt by CRLF line terminators (issue #75)
 # empty line must follow this comment for immediate fail with CRLF newlines
 
-backup_path="/opt/nvidia/libnvidia-encode-backup"
+backup_path="/home/lidaiyan/patch_workshop/libnvidia-encode-backup"
 silent_flag=''
 manual_driver_version=''
 flatpak_flag=''
@@ -303,17 +303,19 @@ patch_common () {
     fi
 
     declare -a driver_locations=(
-        '/usr/lib/x86_64-linux-gnu'
-        '/usr/lib/x86_64-linux-gnu/nvidia/current/'
-        '/usr/lib/x86_64-linux-gnu/nvidia/tesla/'
-        "/usr/lib/x86_64-linux-gnu/nvidia/tesla-${driver_version%%.*}/"
-        '/usr/lib64'
-        '/usr/lib'
-        "/usr/lib/nvidia-${driver_version%%.*}"
+        "/home/lidaiyan/patch_workshop/NVIDIA-Linux-x86_64-$driver_version"
+        # '/usr/lib/x86_64-linux-gnu'
+        # '/usr/lib/x86_64-linux-gnu/nvidia/current/'
+        # '/usr/lib/x86_64-linux-gnu/nvidia/tesla/'
+        # "/usr/lib/x86_64-linux-gnu/nvidia/tesla-${driver_version%%.*}/"
+        # '/usr/lib64'
+        # '/usr/lib'
+        # "/usr/lib/nvidia-${driver_version%%.*}"
     )
 
     dir_found=''
     for driver_dir in "${driver_locations[@]}" ; do
+        echo "Looking for driver in: $driver_dir/$object.$driver_version"
         if [[ -e "$driver_dir/$object.$driver_version" ]]; then
             dir_found='true'
             break
@@ -367,9 +369,12 @@ patch () {
            "$backup_path/$object.$driver_version$backup_suffix"
     fi
     sha1sum "$backup_path/$object.$driver_version$backup_suffix"
+    md5sum "$backup_path/$object.$driver_version$backup_suffix"
+
     sed "$patch" "$backup_path/$object.$driver_version$backup_suffix" > \
       "${PATCH_OUTPUT_DIR-$driver_dir}/$object.$driver_version"
     sha1sum "${PATCH_OUTPUT_DIR-$driver_dir}/$object.$driver_version"
+    md5sum "${PATCH_OUTPUT_DIR-$driver_dir}/$object.$driver_version"
     ldconfig
     echo "Patched!"
 }
